@@ -477,9 +477,6 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
   <div id="status" class="banner hidden"></div>
 
   <section id="paneSetup" class="hidden">
-    <label for="initials">Your initials</label>
-    <input id="initials" maxlength="4" autocomplete="off" placeholder="e.g. MP" style="text-transform:uppercase">
-    <div class="hint">Shown in your voucher numbers, e.g. ACMI_CV-MP-000123. The number itself is shared by everyone.</div>
     <label for="issuerSetup">Your name</label>
     <input id="issuerSetup" autocomplete="name">
     <label for="pin">Access PIN</label>
@@ -590,7 +587,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
     let res;
     try {
       res = await fetch(SCRIPT_URL, {method:"POST", body: JSON.stringify(Object.assign({key: ls.get("acmi_pin") || ""}, payload))});
-    } catch(e){ throw new Error("No internet connection. Nothing was saved. Try again when online."); }
+    } catch(e){ throw new Error(navigator.onLine ? "Could not reach the voucher register. Check the register link and that the deployment access is set to Anyone." : "No internet connection. Nothing was saved. Try again when online."); }
     let j;
     try { j = await res.json(); } catch(e){ throw new Error("The register did not respond properly. Try again."); }
     if(!j.ok) throw new Error(j.error || "The register returned an error.");
@@ -672,6 +669,11 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
       pdf.setFont("helvetica","bold"); pdf.setFontSize(15);
       pdf.text("CANCELLED" + (r.voidReason ? ": " + String(r.voidReason).slice(0,60) : ""), R, 128, {align:"right"});
     }
+    // Signature
+    pdf.setFont("helvetica","normal"); pdf.setFontSize(11);
+    pdf.setLineWidth(0.3); pdf.line(140, 140, R, 140);
+    pdf.text("Receiver's Signature", (140+R)/2, 145, {align:"center"});
+
     pdf.setLineDashPattern([2,2],0); pdf.setLineWidth(0.2);
     pdf.line(0, 148.5, 210, 148.5);
     return pdf;
@@ -695,30 +697,27 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
   function showSetup(){
     $("appArea").classList.add("hidden");
     $("paneSetup").classList.remove("hidden");
-    $("initials").value = ls.get("acmi_initials") || "";
     $("issuerSetup").value = ls.get("acmi_issuer") || "";
     $("pin").value = ls.get("acmi_pin") || "";
   }
   function showApp(){
     $("paneSetup").classList.add("hidden");
     $("appArea").classList.remove("hidden");
-    $("status").textContent = "Signed in as " + ls.get("acmi_issuer") + " (" + ls.get("acmi_initials") + ").";
+    $("status").textContent = "Signed in as " + ls.get("acmi_issuer") + ".";
     $("status").classList.remove("hidden");
     loadCache(); refreshList(); showLegacy();
   }
   $("settingsBtn").onclick = showSetup;
   $("setupBtn").onclick = async () => {
-    const ini = $("initials").value.trim().toUpperCase().replace(/[^A-Z]/g,"");
     const name = $("issuerSetup").value.trim();
     const pin = $("pin").value.trim();
-    if(ini.length < 2 || !name || !pin){ msg($("setupMsg"), "Enter 2 to 4 letters for initials, your name and the access PIN.", "err"); return; }
+    if(!name || !pin){ msg($("setupMsg"), "Enter your name and the access PIN.", "err"); return; }
     const oldPin = ls.get("acmi_pin");
     ls.set("acmi_pin", pin);
     $("setupBtn").disabled = true; msg($("setupMsg"), "Connecting to the register...");
     try {
       await api({action:"ping"});
-      if(!ls.set("acmi_initials", ini)) throw new Error("This browser is blocking storage.");
-      ls.set("acmi_issuer", name);
+      if(!ls.set("acmi_issuer", name)) throw new Error("This browser is blocking storage.");
       $("setupMsg").className = "msg";
       showApp();
     } catch(e){
@@ -745,8 +744,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
       org: $("org").value.trim(),
       details: $("details").value.trim(),
       amount: parseAmt($("amount").value),
-      issuer: ls.get("acmi_issuer") || "",
-      initials: ls.get("acmi_initials") || ""
+      issuer: ls.get("acmi_issuer") || ""
     };
     const missing = [];
     if(!r.date) missing.push("date");
@@ -850,7 +848,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
   };
 
   // ---------- Start ----------
-  if(ls.get("acmi_pin") && ls.get("acmi_initials") && ls.get("acmi_issuer")) showApp(); else showSetup();
+  if(ls.get("acmi_pin") && ls.get("acmi_issuer")) showApp(); else showSetup();
 })();
 </script>
 </body>
