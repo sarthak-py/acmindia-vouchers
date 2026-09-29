@@ -577,7 +577,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
   }
   function amountInWords(v){
     const r=Math.floor(v), p=Math.round((v-r)*100);
-    return words(r) + " Rupees" + (p ? " and " + two(p) + " Paise" : "") + " Only";
+    return words(r) + (r === 1 ? " Rupee" : " Rupees") + (p ? " and " + two(p) + " Paise" : "") + " Only";
   }
   function msg(el, text, kind){ el.textContent=text; el.className="msg show "+(kind||""); }
 
@@ -672,8 +672,10 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--fg);outl
     // Signature
     pdf.setFont("helvetica","normal"); pdf.setFontSize(11);
     pdf.setLineWidth(0.3); pdf.line(140, 140, R, 140);
+    pdf.text("Receiver's Signature", (140+R)/2, 145, {align:"center"});
     pdf.line(L, 140, 75, 140);
     pdf.text("Authorised Signatory", (L+75)/2, 145, {align:"center"});
+
     pdf.setLineDashPattern([2,2],0); pdf.setLineWidth(0.2);
     pdf.line(0, 148.5, 210, 148.5);
     return pdf;
