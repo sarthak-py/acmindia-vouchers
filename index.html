@@ -501,7 +501,7 @@ input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid v
     <input id="lgPin" type="password" autocomplete="current-password">
     <button class="primary" id="loginBtn" type="button">Sign in</button>
     <div class="msg" id="loginMsg"></div>
-    <div class="hint" style="margin-top:18px">Version 2.5</div>
+    <div class="hint" style="margin-top:18px">Version 2.6</div>
   </section>
 
   <!-- App -->
@@ -1295,6 +1295,7 @@ input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid v
     (pages || []).forEach(u => { p.addPage(); p.addImage(u, "JPEG", 0, 0, 210, 297, undefined, "FAST"); });
     return p;
   }
+  function safeNo(serial){ return String(serial).replace(/^ACMI_/, "").replace(/[^A-Za-z0-9_-]/g,"_"); }
   function fileName(k, rec){ return "ACMI_" + (k === "si" ? "Invoice_" : "") + safeNo(rec.serial) + (rec.status === "void" ? "_CANCELLED" : "") + ".pdf"; }
   function saveFile(name, blob){
     const url = URL.createObjectURL(blob); const a = document.createElement("a");
